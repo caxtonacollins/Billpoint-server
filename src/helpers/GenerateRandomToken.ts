@@ -1,4 +1,4 @@
-import { db } from "../app";
+import { Users } from "../models/userModel";
 import EmailSender from "../services/mail";
 
 export const generateRandomToken = async () => {
@@ -9,13 +9,12 @@ export const generateRandomToken = async () => {
 };
 
 export const generateAndSaveOTP = async (email: string) => {
-  const usersCollection = db.collection('users');
   const min = 1000;
   const max = 9999;
   const otp = Math.floor(min + Math.random() * (max - min + 1));
   const otpCreationTime = new Date();
 
-  await usersCollection.updateOne(
+  await Users.updateOne(
     { email },
     { $set: { verificationOTP: otp, otpCreationTime } }
   );

@@ -1,10 +1,10 @@
-import { db } from "../app";
 import {
   checkThatUserExistWithEmail,
   checkThatPasswordIsValid,
 } from "../services/userService";
 import JwtHelper from "../helpers/JwtHelper";
 import bcrypt from "bcrypt";
+import { Users } from "../models/userModel";
 import { log } from "console";
 import { ObjectId } from "mongodb";
 import { checkIfOtpIsExpired } from "../helpers/checkIfOtpExpire";
@@ -20,22 +20,21 @@ import { comparePin, hashPin } from "../helpers/hashPin";
 
 export const verifyEmail = async (email: string, verificationCode: string) => {
   try {
-    // Get users collection
-    const usersCollection = db.collection("users");
+    // Get Userss collection
 
-    // Find user by email
-    const user = await usersCollection.findOne({ email });
+    // Find Users by email
+    const users = await Users.findOne({ email });
 
-    if (!user) {
-      throw new Error(`User with email: ${email} does not exist`);
+    if (!users) {
+      throw new Error(`Users with email: ${email} does not exist`);
     }
 
     const isExpired = await verifyOTP(email, verificationCode);
     log(isExpired);
 
     if (isExpired === false) {
-      await usersCollection.findOneAndUpdate(
-        { _id: user._id },
+      await Users.findOneAndUpdate(
+        { _id: users._id },
         { $set: { verified: true } }
       );
     }
@@ -58,14 +57,12 @@ export const setTransactionPin = async (
   transactionPin: string
 ) => {
   try {
-    // Get users collection
-    const usersCollection = db.collection("users");
 
-    // Find user by email
-    const user = await usersCollection.findOne({ email });
+    // Find Users by email
+    const user = await Users.findOne({ email });
 
     if (!user) {
-      throw new Error("User not found");
+      throw new Error("Users not found");
     }
 
     // const saltRounds = 10;
@@ -73,7 +70,7 @@ export const setTransactionPin = async (
     const hashedPin = await hashPin(transactionPin);
     log("hashedPin:", hashedPin);
 
-    await usersCollection.findOneAndUpdate(
+    await Users.findOneAndUpdate(
       { _id: user._id },
       { $set: { transactionPin: hashedPin } }
     );
@@ -86,14 +83,13 @@ export const setTransactionPin = async (
 };
 
 export const verifyTransactionPin = async (
-  userId: string,
+  UsersId: string,
   transactionPin: string
 ) => {
-  const usersCollection = db.collection("users");
+  const user = await Users.findOne({ _id: new ObjectId(UsersId) });
 
-  const user = await usersCollection.findOne({ _id: new ObjectId(userId) });
   if (!user || !user.transactionPin) {
-    throw new Error("User or transaction pin not found");
+    throw new Error("Users or transaction pin not found");
   }
 
   const match = await comparePin(transactionPin, user.transactionPin);
@@ -114,25 +110,29 @@ export const verifyTransactionPin = async (
  */
 
 export const verifyOTP = async (email: string, verificationCode: string) => {
-  const usersCollection = db.collection("users");
   const user = await checkThatUserExistWithEmail(email);
 
   if (!user) {
-    throw new Error(`User with email: ${email} does not exist`);
+    throw new Error(`Users with email: ${email} does not exist`);
   }
 
-  const userOtp = user.verificationOTP.toString();
+  const UsersOtp = user.verificationOTP.toString();
 
-  log(verificationCode, userOtp);
+  log(verificationCode, UsersOtp);
 
-  if (verificationCode === userOtp) {
+  if (verificationCode === UsersOtp) {
     const otpCreationTime = user.otpCreationTime;
+
+
+    if (!otpCreationTime) {
+      throw new Error('OTP creation time is not available');
+    }
 
     const isExpired = checkIfOtpIsExpired(otpCreationTime);
 
     // setting the verificationOTP
     if (isExpired === false) {
-      await usersCollection.updateOne(
+      await Users.updateOne(
         { _id: user._id },
         { $set: { verificationOTP: "", otpCreationTime: "" } }
       );

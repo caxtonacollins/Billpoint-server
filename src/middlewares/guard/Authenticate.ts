@@ -1,10 +1,10 @@
 import JwtHelper from "../../helpers/JwtHelper";
 import { NextFunction, Request, Response } from "express";
 import { IUserRequest } from "../../interfaces";
-import { db } from "../../app";
 import { log } from "console";
 import { JwtPayload } from "jsonwebtoken";
 import { ObjectId } from "mongodb";
+import { Users } from "../../models/userModel";
 
 /**
  * @function Authenticate
@@ -21,25 +21,28 @@ export const Authenticate = async (
   try {
     const authHeader = req.headers.authorization;
     if (!authHeader) {
-      return res.status(401).json({ error: true, message: "Access denied, no token provided"});
+      return res
+        .status(401)
+        .json({ error: true, message: "Access denied, no token provided" });
     }
 
     const token = authHeader.split(" ")[1];
     if (!token) {
-      return res.status(401).json({ error: true, message: "Access denied, no token provided"});
+      return res
+        .status(401)
+        .json({ error: true, message: "Access denied, no token provided" });
     }
 
     try {
-      const decoded = JwtHelper.verifyToken(token) as JwtPayload
+      const decoded = JwtHelper.verifyToken(token) as JwtPayload;
       log("decoded", decoded);
 
       // Get user data
-      const userCollection = db.collection("users");
-      const userId = decoded.userId
-      const user = await userCollection.findOne({_id: new ObjectId(decoded.userId)});
-      
+      const userId = decoded.userId;
+      const user = await Users.findOne({ _id: new ObjectId(userId) });
+
       log("user", user);
-      
+
       if (!user) {
         throw new Error("User not found");
       }

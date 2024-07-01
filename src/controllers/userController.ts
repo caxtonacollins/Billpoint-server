@@ -8,8 +8,8 @@ import {
   isValidEmail,
   updateUserById,
 } from "../services/userService";
+import { Users } from "../models/userModel";
 import { MongoClient, ObjectId } from "mongodb";
-import { db } from "../app";
 import {
   generateAndSaveOTP,
   generateRandomToken,
@@ -52,8 +52,6 @@ class UserController {
       if (!isValidEmail(email)) {
         throw new Error("Invalid company email address");
       }
-      const usersCollection = db.collection("users");
-      // const user = await usersCollection.findOne({ email });
 
       const emailExist = await checkThatUserExistWithEmail(email);
       const numberExist = await checkThatUserExistWithPhoneNumber(number);
@@ -88,40 +86,28 @@ class UserController {
         password: hashedPassword,
         verified: false,
       };
-      const result = await usersCollection.insertOne(userData);
+      const newUser = await Users.create(userData);
 
-      if (result.acknowledged) {
-        // Fetch the inserted user from the database to include in the response
-        const insertedUser = await usersCollection.findOne(
-          {
-            _id: new ObjectId(result.insertedId),
-          },
-          { projection: { password: 0, verificationOTP: 0 } }
-        );
+      const expiresIn = "30m";
+      const payload = {
+        userId: newUser._id,
+      };
+      const token = JwtHelper.generateToken(payload, expiresIn);
 
-        const expiresIn = "30m";
-        const payload = {
-          userId: insertedUser?._id,
-        };
-        const token = JwtHelper.generateToken(payload, expiresIn);
+      log({ payload, token });
+      res.status(201).json({
+        error: false,
+        message: "User created successfully",
+        data: newUser,
+        token,
+      });
 
-        log({ payload, token });
-        if (insertedUser) {
-          res.status(201).json({
-            error: false,
-            message: "User created successfully",
-            data: insertedUser,
-            token,
-          });
-        }
-
-        // sending email verification otp
-        try {
-          await generateAndSaveOTP(email);
-        } catch (error: any) {
-          console.error(error);
-          throw new Error("Error sending otp: " + error.message);
-        }
+      // sending email verification otp
+      try {
+        await generateAndSaveOTP(email);
+      } catch (error: any) {
+        console.error(error);
+        throw new Error("Error sending otp: " + error.message);
       }
     } catch (error: any) {
       console.error(error);
@@ -187,12 +173,10 @@ class UserController {
       const updateData = req.body;
 
       if (updateData.password) {
-        return res
-          .status(400)
-          .json({
-            error: true,
-            message: "Authentication required to update or set password",
-          });
+        return res.status(400).json({
+          error: true,
+          message: "Authentication required to update or set password",
+        });
       }
 
       const users = await updateUserById(id, updateData);
@@ -216,8 +200,7 @@ class UserController {
   static async deleteUser(req: Request, res: Response) {
     try {
       const id = req.params.id;
-      const usersCollection = db.collection("users");
-      const deletedUser = await usersCollection.deleteOne({
+      const deletedUser = await Users.deleteOne({
         _id: new ObjectId(id),
       });
 

@@ -1,12 +1,11 @@
-import { db } from "../app";
 import bcrypt from "bcrypt";
 import { log } from "console";
-import { Db, ObjectId } from "mongodb";
+import { Users } from "../models/userModel";
+import { ObjectId } from "mongodb";
 
 export const checkThatUserExistWithPhoneNumber = async (number: number) => {
   try {
-    const usersCollection = db.collection("users");
-    const user = await usersCollection.findOne({ number });
+    const user = await Users.findOne({ number });
     return user;
   } catch (error: any) {
     console.error(error);
@@ -16,8 +15,8 @@ export const checkThatUserExistWithPhoneNumber = async (number: number) => {
 
 export const checkThatUserExistWithEmail = async (email: string) => {
   try {
-    const usersCollection = db.collection("users");
-    const user = await usersCollection.findOne({ email });
+    // const Users = db.collection("users");
+    const user = await Users.findOne({ email });
     return user;
   } catch (error: any) {
     console.error(error);
@@ -32,8 +31,8 @@ export const checkThatPasswordIsValid = async (
   try {
     let hashedPassword;
 
-    const usersCollection = db.collection("users");
-    const user = await usersCollection.findOne({ email });
+    // const Users = db.collection("users");
+    const user = await Users.findOne({ email });
 
     if (!user || !user.password) {
       return false;
@@ -42,8 +41,8 @@ export const checkThatPasswordIsValid = async (
     hashedPassword = user.password;
 
     const match = await bcrypt.compare(password, hashedPassword);
-    
-    return match
+
+    return match;
   } catch (error: any) {
     console.error(error);
     throw new Error(error.message);
@@ -64,13 +63,10 @@ export const isValidPhoneNumber = (phoneNumber: string) => {
 
 export const getAllUsers = async () => {
   try {
-    const usersCollection = db.collection("users");
-    const users = usersCollection
-      .find(
-        {},
-        { projection: { password: 0, verificationOTP: 0, transactionPin: 0 } }
-      )
-      .toArray();
+    // const Users = db.collection("users");
+    const users = Users.find({}).select(
+      "-password -verificationOTP -transactionPin"
+    );
     return users;
   } catch (error: any) {
     console.error(error);
@@ -80,10 +76,9 @@ export const getAllUsers = async () => {
 
 export const getUserById = async (id: any) => {
   try {
-    const usersCollection = db.collection("users");
-    const users = usersCollection.findOne(
-      { _id: new ObjectId(id) },
-      { projection: { password: 0, verificationOTP: 0, transactionPin: 0 } }
+    // const Users = db.collection("users");
+    const users = Users.findOne({ _id: new ObjectId(id) }).select(
+      "-password -verificationOTP -transactionPin"
     );
     return users;
   } catch (error: any) {
@@ -94,18 +89,18 @@ export const getUserById = async (id: any) => {
 
 export const updateUserById = async (id: any, updateData: object) => {
   try {
-    const usersCollection = db.collection("users");
-    const users = usersCollection.updateOne(
+    // const Users = db.collection("users");
+    const users = Users.updateOne(
       { _id: new ObjectId(id) },
       { $set: updateData }
     );
 
     if (!users) throw new Error("No users found🥲");
 
-    const updatedUser = usersCollection.findOne(
-      { _id: new ObjectId(id) },
-      { projection: { password: 0, verificationOTP: 0, transactionPin: 0 } }
-    );
+    const updatedUser = Users.findOne(
+      { _id: new ObjectId(id) }).select(
+        "-password -verificationOTP -transactionPin"
+      );
     return updatedUser;
   } catch (error: any) {
     console.error(error);
@@ -115,20 +110,35 @@ export const updateUserById = async (id: any, updateData: object) => {
 
 export const updateUserByEmail = async (email: string, updateData: object) => {
   try {
-    const usersCollection = db.collection("users");
-    const users = usersCollection.updateOne({ email }, { $set: updateData });
+    // const Users = db.collection("users");
+    const users = Users.updateOne({ email }, { $set: updateData });
 
     if (!users) throw new Error("No users found🥲");
 
-    const updatedUser = await usersCollection.findOne(
-      { email },
-      { projection: { password: 0, verificationOTP: 0, transactionPin: 0 } }
-    );
+    const updatedUser = await Users.findOne(
+      { email }).select(
+        "-password -verificationOTP -transactionPin"
+      );;
 
     log(updatedUser);
     return updatedUser;
   } catch (error: any) {
     console.error(error);
     throw new Error(error.message);
+  }
+};
+
+export const getCurrentAmountByEmail = async (email: string) => {
+  try {
+    const user = await Users.findOne({ email }).populate("wallet");
+  if (!user) {
+    throw new Error('User or wallet not found');
+  }
+
+  const balance = user.wallet.balance
+  return balance
+  } catch (error) {
+    console.error('Error fetching user amount:', error);
+    throw error;
   }
 };

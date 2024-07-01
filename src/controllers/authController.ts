@@ -19,7 +19,6 @@ import {
   generateRandomToken,
 } from "../helpers/GenerateRandomToken";
 import EmailSender from "../services/mail";
-import { db } from "../app";
 import JwtHelper from "../helpers/JwtHelper";
 
 /**
@@ -189,7 +188,7 @@ class AuthController {
 
       if (!user) throw new Error("user does not exist😒");
 
-      const userId = user._id.toString();
+      const userId = user._id as string;
 
       await verifyTransactionPin(userId, newPin);
 

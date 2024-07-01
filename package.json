@@ -17,6 +17,7 @@
    },
    "homepage": "https://github.com/caxtonacollins/ts-server-start#readme",
    "dependencies": {
+      "@sinch/sdk-core": "^1.1.0",
       "bcrypt": "^5.1.1",
       "bcryptjs": "^2.4.3",
       "body-parser": "^1.20.2",
@@ -28,11 +29,15 @@
       "express-validator": "^7.1.0",
       "helmet": "^7.1.0",
       "jsonwebtoken": "^9.0.2",
+      "moment": "^2.30.1",
+      "moment-timezone": "^0.5.45",
       "mongodb": "^6.7.0",
+      "mongoose": "^8.4.4",
       "morgan": "^1.10.0",
       "multer": "^1.4.5-lts.1",
       "nodemailer": "^6.9.14",
-      "nodemailer-mailgun-transport": "^2.1.5"
+      "nodemailer-mailgun-transport": "^2.1.5",
+      "winston": "^3.13.0"
    },
    "devDependencies": {
       "@types/bcrypt": "^5.0.2",
@@ -42,6 +47,8 @@
       "@types/express-session": "^1.18.0",
       "@types/jsonwebtoken": "^9.0.6",
       "@types/mongodb": "^4.0.7",
+      "@types/mongoose": "^5.11.97",
+      "@types/morgan": "^1.9.9",
       "@types/node": "^20.14.7",
       "@types/nodemailer": "^6.4.15",
       "nodemon": "^3.1.4",

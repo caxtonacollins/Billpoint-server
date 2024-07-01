@@ -1,13 +1,15 @@
 import express, { Application, NextFunction, Request, Response } from "express";
 import dotenv from "dotenv";
-import { Db, MongoClient } from "mongodb";
 import Routes from "./routes/index";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import bodyParser from "body-parser";
 import session from "express-session";
 import "dotenv/config";
-import { IRequest } from "./interfaces";
+import mongoose from "mongoose";
+import { logger } from "./config/wistonLogger";
+import { createReserveAccount } from "./services/monnifyService";
+import { log } from "console";
 
 // Load environment variables
 dotenv.config();
@@ -43,39 +45,48 @@ app.options("*", cors());
 //   next();
 // });
 
-// parse urlencoded request body
-app.use(express.urlencoded({ extended: true }));
+app.use(bodyParser.json());
 
 app.use(cookieParser());
 
 // parse json request body
 app.use(express.json());
 
-let client: MongoClient;
-let db: Db;
+// parse urlencoded request body
+app.use(express.urlencoded({ extended: true }));
 
-// MongoDB Connection
-const connectDB = async () => {
-  const uri = process.env.MONGODB_URI as string;
-  client = new MongoClient(uri);
-  try {
-    await client.connect();
-    app.set("mongoClient", client); // Save the client instance to the app
-    db = client.db("ts-server-start");
-    console.log(`MongoDB connected ${db.databaseName}✈️`);
-  } catch (error) {
-    console.error("MongoDB connection error:", error);
-  }
-};
+// Serve static files
+app.use(express.static(`${__dirname}/public`));
 
-connectDB();
+// connectDB();
+const uri = process.env.MONGODB_URI as string;
+mongoose.connect(uri, {}).then(() => {
+  logger.info("Connected to MongoDB✈️");
+});
 
 // Middleware to add db to req
 app.use((req: Request, res: Response, next: NextFunction) => {
-  (req as IRequest).db = db;
   next();
 });
 
 app.use("/api/v1", Routes);
 
-export { app, db };
+// async function main() {
+//   try {
+//     const user = {
+//       _id: "668086d2bb9369e95bf5e95a",
+//       firstName: "string",
+//       lastName: "string",
+//       email: "string2@gmail.com",
+//       number: "08628798897",
+//     };
+//     const newAccount = await createReserveAccount(user);
+//     log("New Account: ", newAccount);
+//   } catch (error) {
+//     console.error("Error creating reserve account:", error);
+//   }
+// }
+
+// main();
+
+export { app };
