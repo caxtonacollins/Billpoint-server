@@ -10,6 +10,8 @@ import mongoose from "mongoose";
 import { logger } from "./config/wistonLogger";
 import { log } from "console";
 import WalletService from "./services/walletService";
+import { Server } from 'socket.io';
+import http from 'http';
 
 // Load environment variables
 dotenv.config();
@@ -29,6 +31,8 @@ const corsOptions = {
 };
 
 const app: Application = express();
+const server = http.createServer(app);
+const io = new Server(server);
 
 // app.use(cors(corsOptions));
 app.use(cors());
@@ -70,6 +74,17 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 });
 
 app.use("/api/v1", Routes);
+
+io.on('connection', (socket) => {
+  console.log('a user connected 😎');
+  socket.on('disconnect', () => {
+    console.log('user disconnected 😌');
+  });
+});
+
+// Passing the Socket.IO instance to the notification controller
+import { initSocket } from './controllers/notificationController';
+initSocket(io);
 
 async function main() {
   try {

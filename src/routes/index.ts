@@ -8,6 +8,7 @@ import cableRouter from "./cableRoute";
 import electricRouter from "./electricRoute";
 import beneficiaryRouter from "./beneficiaryRoute";
 import educationRouter from "./educationRoute"
+import notificationsRouter from "./notificationRoute"
 
 const router = express.Router();
 
@@ -20,5 +21,6 @@ router.use("/cable", cableRouter);
 router.use("/electric", electricRouter);
 router.use("/beneficiary", beneficiaryRouter);
 router.use("/education", educationRouter);
+router.use("/notifications", notificationsRouter);
 
 export default router;

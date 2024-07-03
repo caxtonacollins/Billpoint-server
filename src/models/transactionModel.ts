@@ -44,7 +44,8 @@ const TransactionSchema: Schema = new Schema({
       "Electricity Bill",
       "cable",
       "TV Subscription",
-      "Education"
+      "Education",
+      "Fund Wallet"
     ],
     required: true,
   },
