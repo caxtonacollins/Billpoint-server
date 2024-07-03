@@ -10,6 +10,7 @@ enum TransactionType {
   ElectricityBill = "Electricity Bill",
   Cable = "cable",
   TVSubscription = "TV Subscription",
+  Education = "Education",
 }
 
 enum TransactionStatus {
@@ -23,9 +24,11 @@ export interface ITransaction extends Document {
   user: ObjectId;
   transactionType: TransactionType;
   transactionId: string;
+  details: string
   status: TransactionStatus;
   amount: number;
   date: Date;
+  token?: string;
 }
 
 const TransactionSchema: Schema = new Schema({
@@ -41,16 +44,19 @@ const TransactionSchema: Schema = new Schema({
       "Electricity Bill",
       "cable",
       "TV Subscription",
+      "Education"
     ],
     required: true,
   },
   transactionId: { type: String, required: true },
+  details: { type: String, required: true },
   status: {
     type: String,
     enum: ["success", "delivered", "pending", "failed"],
     required: true,
   },
   amount: { type: Number, required: true },
+  token: { type: String },
   date: { type: Date, required: true },
 });
 

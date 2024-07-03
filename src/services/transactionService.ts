@@ -4,7 +4,7 @@ import { BankDetails } from "../models/bankDetailsModel";
 import { Transactions } from "../models/transactionModel";
 import { Wallets } from "../models/wallet.model";
 import PaystackService from "./paystack";
-import WalletService from "./walletService";
+import WalletService, { updateWallet } from "./walletService";
 
 /**
  * @class TransactionService
@@ -17,14 +17,8 @@ class TransactionService {
    * @param {object} data
    * @returns {Promise<UserTransactionDetails>}
    */
-  static async createTransaction(user: string, data: any) {
-    const transactionData = {
-      title: data.title,
-      description: data.description,
-      amount: data.amount,
-      user,
-    };
-    await Transactions.create(transactionData);
+  static async createTransaction(data: object) {
+    await Transactions.create(data);
   }
 
   /**
@@ -48,10 +42,10 @@ class TransactionService {
         throw new Error("insufficient balance");
       }
       // update sender wallet balance
-      await WalletService.updateWallet(senderId, amount, "EXPENSE");
+      await updateWallet(senderId, amount, "EXPENSE");
 
       //update receiver wallet balance
-      await WalletService.updateWallet(receiverWallet.user, amount, "INCOME");
+      await updateWallet(receiverWallet.user, amount, "INCOME");
 
       return true;
     }
@@ -107,16 +101,7 @@ class TransactionService {
     );
     if (withdrawal) {
       // update sender wallet balance
-      await WalletService.updateWallet(userId, amount, "EXPENSE");
-
-      // create trasaction record
-      const transactionData = {
-        title: "withdrawal to wallet",
-        description: reason,
-        amount,
-      };
-
-      await this.createTransaction(userId, transactionData);
+      await updateWallet(userId, amount, "EXPENSE");
 
       return withdrawal;
     }
@@ -150,16 +135,7 @@ class TransactionService {
 
     if (sentMoney) {
       // update sender wallet balance
-      await WalletService.updateWallet(userId, amount, "EXPENSE");
-
-      // create transaction record
-      const transactionData = {
-        title: "Money Transfer",
-        description: reason,
-        amount,
-      };
-
-      await this.createTransaction(userId, transactionData);
+      await updateWallet(userId, amount, "EXPENSE");
 
       return sentMoney;
     }

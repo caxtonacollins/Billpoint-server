@@ -8,8 +8,8 @@ import session from "express-session";
 import "dotenv/config";
 import mongoose from "mongoose";
 import { logger } from "./config/wistonLogger";
-import { createReserveAccount } from "./services/monnifyService";
 import { log } from "console";
+import WalletService from "./services/walletService";
 
 // Load environment variables
 dotenv.config();
@@ -71,22 +71,22 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 
 app.use("/api/v1", Routes);
 
-// async function main() {
-//   try {
-//     const user = {
-//       _id: "668086d2bb9369e95bf5e95a",
-//       firstName: "string",
-//       lastName: "string",
-//       email: "string2@gmail.com",
-//       number: "08628798897",
-//     };
-//     const newAccount = await createReserveAccount(user);
-//     log("New Account: ", newAccount);
-//   } catch (error) {
-//     console.error("Error creating reserve account:", error);
-//   }
-// }
+async function main() {
+  try {
+    // const user = {
+    //   _id: "668086d2bb9369e95bf5e95a",
+    //   firstName: "string",
+    //   lastName: "string",
+    //   email: "string2@gmail.com",
+    //   number: "08628798897",
+    // };
+    // const newAccount = await createReserveAccount(user);
+    // log("New Account: ", newAccount);
+  } catch (error) {
+    console.error("Error creating reserve account:", error);
+  }
+}
 
-// main();
+main();
 
 export { app };

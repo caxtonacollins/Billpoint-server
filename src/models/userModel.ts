@@ -2,6 +2,7 @@ import mongoose, { Schema, Document, ObjectId } from "mongoose";
 import { IWallet } from "./wallet.model";
 
 export interface IUser extends Document {
+  _id: string;
   firstName: string;
   lastName: string;
   password: string;
@@ -24,7 +25,13 @@ const UserSchema: Schema = new Schema({
   password: { type: String, required: true },
   verified: { type: Boolean, default: false },
   verificationOTP: { type: Number },
-  wallet: { type: mongoose.Schema.Types.ObjectId },
+  wallet: { type: mongoose.Schema.Types.ObjectId, ref: 'Wallets' },
+  status: {
+    type: String,
+    required: true,
+    enum: ["Active", "Inactive"],
+    default: "Active",
+  },
 });
 
 // Create and export the User model

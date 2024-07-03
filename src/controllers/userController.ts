@@ -8,7 +8,7 @@ import {
   isValidEmail,
   updateUserById,
 } from "../services/userService";
-import { Users } from "../models/userModel";
+import { IUser, Users } from "../models/userModel";
 import { MongoClient, ObjectId } from "mongodb";
 import {
   generateAndSaveOTP,
@@ -17,6 +17,7 @@ import {
 import EmailSender from "../services/mail";
 import { log } from "console";
 import JwtHelper from "../helpers/JwtHelper";
+import WalletService from "../services/walletService";
 
 /**
  * @class UserController
@@ -88,13 +89,27 @@ class UserController {
       };
       const newUser = await Users.create(userData);
 
+      const user = newUser._id;
+
+      const newWallet = await WalletService.createWallet(
+        user,
+        firstName,
+        lastName
+      );
+
+      const walletId = newWallet._id;
+
+      await Users.updateOne(
+        { _id: user },
+        { $set: { wallet: new ObjectId(walletId) } }
+      );
+
       const expiresIn = "30m";
       const payload = {
         userId: newUser._id,
       };
       const token = JwtHelper.generateToken(payload, expiresIn);
 
-      log({ payload, token });
       res.status(201).json({
         error: false,
         message: "User created successfully",

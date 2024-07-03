@@ -1,0 +1,176 @@
+// serviceId res
+
+{
+   "error": false,
+   "data": [
+       {
+           "serviceID": "airtel-data",
+           "name": "Airtel Data",
+           "minimium_amount": "",
+           "maximum_amount": "",
+           "convinience_fee": "0 %",
+           "product_type": "fix",
+           "image": "https://sandbox.vtpass.com/resources/products/200X200/Airtel-Data.jpg"
+       },
+       {
+           "serviceID": "mtn-data",
+           "name": "MTN Data",
+           "minimium_amount": "",
+           "maximum_amount": "",
+           "convinience_fee": "0 %",
+           "product_type": "fix",
+           "image": "https://sandbox.vtpass.com/resources/products/200X200/MTN-Data.jpg"
+       },
+       {
+           "serviceID": "glo-data",
+           "name": "GLO Data",
+           "minimium_amount": "",
+           "maximum_amount": "",
+           "convinience_fee": "0 %",
+           "product_type": "fix",
+           "image": "https://sandbox.vtpass.com/resources/products/200X200/GLO-Data.jpg"
+       },
+       {
+           "serviceID": "etisalat-data",
+           "name": "9mobile Data",
+           "minimium_amount": "",
+           "maximum_amount": "",
+           "convinience_fee": "0 %",
+           "product_type": "fix",
+           "image": "https://sandbox.vtpass.com/resources/products/200X200/9mobile-Data.jpg"
+       },
+       {
+           "serviceID": "smile-direct",
+           "name": "Smile Payment",
+           "minimium_amount": "100",
+           "maximum_amount": "150000",
+           "convinience_fee": "N0.00",
+           "product_type": "fix",
+           "image": "https://sandbox.vtpass.com/resources/products/200X200/Smile-Payment.jpg"
+       },
+       {
+           "serviceID": "spectranet",
+           "name": "Spectranet",
+           "minimium_amount": "",
+           "maximum_amount": "",
+           "convinience_fee": "N0.00",
+           "product_type": "fix",
+           "image": "https://sandbox.vtpass.com/resources/products/200X200/"
+       },
+       {
+           "serviceID": "9mobile-sme-data",
+           "name": "9mobile Sme Data",
+           "minimium_amount": "",
+           "maximum_amount": "",
+           "convinience_fee": "0 %",
+           "product_type": "fix",
+           "image": "https://sandbox.vtpass.com/resources/products/200X200/9mobile-Sme-Data.jpg"
+       }
+   ]
+}
+
+// variation code res
+
+{
+   "error": false,
+   "data": {
+       "response_description": "000",
+       "content": {
+           "ServiceName": "Airtel Data",
+           "serviceID": "airtel-data",
+           "convinience_fee": "0 %",
+           "varations": [
+               {
+                   "variation_code": "airt-50",
+                   "name": "Airtel Data Bundle - 50 Naira - 25MB  - 1Day",
+                   "variation_amount": "49.99",
+                   "fixedPrice": "Yes"
+               },
+               {
+                   "variation_code": "airt-100",
+                   "name": "Airtel Data Bundle - 100 Naira - 75MB - 1Day",
+                   "variation_amount": "99.00",
+                   "fixedPrice": "Yes"
+               },
+               {
+                   "variation_code": "airt-200",
+                   "name": "Airtel Data Bundle - 200 Naira - 200MB - 3Days",
+                   "variation_amount": "199.03",
+                   "fixedPrice": "Yes"
+               },
+               {
+                   "variation_code": "airt-300",
+                   "name": "Airtel Data Bundle - 300 Naira - 350MB - 7 Days",
+                   "variation_amount": "299.02",
+                   "fixedPrice": "Yes"
+               },
+               {
+                   "variation_code": "airt-500",
+                   "name": "Airtel Data Bundle - 500 Naira - 750MB - 14 Days",
+                   "variation_amount": "499.00",
+                   "fixedPrice": "Yes"
+               },
+               {
+                   "variation_code": "airt-1000",
+                   "name": "Airtel Data Bundle - 1,000 Naira - 1.5GB - 30 Days",
+                   "variation_amount": "999.00",
+                   "fixedPrice": "Yes"
+               },
+               {
+                   "variation_code": "airt-1500",
+                   "name": "Airtel Data Bundle - 1,500 Naira - 3GB - 30 Days",
+                   "variation_amount": "1499.01",
+                   "fixedPrice": "Yes"
+               },
+               {
+                   "variation_code": "airt-2000",
+                   "name": "Airtel Data Bundle - 2,000 Naira - 4.5GB - 30 Days",
+                   "variation_amount": "1999.00",
+                   "fixedPrice": "Yes"
+               },
+               {
+                   "variation_code": "airt-3000",
+                   "name": "Airtel Data Bundle - 3,000 Naira - 8GB - 30 Days",
+                   "variation_amount": "2999.02",
+                   "fixedPrice": "Yes"
+               },
+               {
+                   "variation_code": "airt-4000",
+                   "name": "Airtel Data Bundle - 4,000 Naira - 11GB - 30 Days",
+                   "variation_amount": "3999.01",
+                   "fixedPrice": "Yes"
+               },
+               {
+                   "variation_code": "airt-5000",
+                   "name": "Airtel Data Bundle - 5,000 Naira - 15GB - 30 Days",
+                   "variation_amount": "4999.00",
+                   "fixedPrice": "Yes"
+               },
+               {
+                   "variation_code": "airt-1500-2",
+                   "name": "Airtel Binge Data - 1,500 Naira (7 Days) - 6GB",
+                   "variation_amount": "1499.03",
+                   "fixedPrice": "Yes"
+               },
+               {
+                   "variation_code": "airt-10000",
+                   "name": "Airtel Data Bundle - 10,000 Naira - 40GB - 30 Days",
+                   "variation_amount": "9999.00",
+                   "fixedPrice": "Yes"
+               },
+               {
+                   "variation_code": "airt-15000",
+                   "name": "Airtel Data Bundle - 15,000 Naira - 75GB - 30 Days",
+                   "variation_amount": "14999.00",
+                   "fixedPrice": "Yes"
+               },
+               {
+                   "variation_code": "airt-20000",
+                   "name": "Airtel Data Bundle - 20,000 Naira - 110GB - 30 Days",
+                   "variation_amount": "19999.02",
+                   "fixedPrice": "Yes"
+               }
+           ]
+       }
+   }
+}

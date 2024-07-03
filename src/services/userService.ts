@@ -15,8 +15,7 @@ export const checkThatUserExistWithPhoneNumber = async (number: number) => {
 
 export const checkThatUserExistWithEmail = async (email: string) => {
   try {
-    // const Users = db.collection("users");
-    const user = await Users.findOne({ email });
+    const user = await Users.findOne({ email }).populate("wallet");
     return user;
   } catch (error: any) {
     console.error(error);
@@ -97,10 +96,9 @@ export const updateUserById = async (id: any, updateData: object) => {
 
     if (!users) throw new Error("No users found🥲");
 
-    const updatedUser = Users.findOne(
-      { _id: new ObjectId(id) }).select(
-        "-password -verificationOTP -transactionPin"
-      );
+    const updatedUser = Users.findOne({ _id: new ObjectId(id) }).select(
+      "-password -verificationOTP -transactionPin"
+    );
     return updatedUser;
   } catch (error: any) {
     console.error(error);
@@ -115,10 +113,9 @@ export const updateUserByEmail = async (email: string, updateData: object) => {
 
     if (!users) throw new Error("No users found🥲");
 
-    const updatedUser = await Users.findOne(
-      { email }).select(
-        "-password -verificationOTP -transactionPin"
-      );;
+    const updatedUser = await Users.findOne({ email }).select(
+      "-password -verificationOTP -transactionPin"
+    );
 
     log(updatedUser);
     return updatedUser;
@@ -131,14 +128,14 @@ export const updateUserByEmail = async (email: string, updateData: object) => {
 export const getCurrentAmountByEmail = async (email: string) => {
   try {
     const user = await Users.findOne({ email }).populate("wallet");
-  if (!user) {
-    throw new Error('User or wallet not found');
-  }
+    if (!user) {
+      throw new Error("User or wallet not found");
+    }
 
-  const balance = user.wallet.balance
-  return balance
+    const balance = user.wallet.balance;
+    return balance;
   } catch (error) {
-    console.error('Error fetching user amount:', error);
+    console.error("Error fetching user amount:", error);
     throw error;
   }
 };
