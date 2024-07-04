@@ -14,6 +14,7 @@ export interface IUser extends Document {
   transactionPin?: string;
   otpCreationTime?: Date;
   role: string;
+  referral?: string;
 }
 
 // Create the User schema
@@ -24,7 +25,9 @@ const UserSchema: Schema = new Schema({
   number: { type: String, required: true },
   password: { type: String, required: true },
   verified: { type: Boolean, default: false },
+  suspended: { type: Boolean, default: false },
   verificationOTP: { type: Number },
+  role: { type: String, enum: ['user', 'admin', 'agent'], default: 'user' },
   wallet: { type: mongoose.Schema.Types.ObjectId, ref: 'Wallets' },
   status: {
     type: String,
@@ -32,7 +35,7 @@ const UserSchema: Schema = new Schema({
     enum: ["Active", "Inactive"],
     default: "Active",
   },
+  referral: { type: mongoose.Schema.Types.ObjectId, ref: 'Referral', required: true }
 });
 
-// Create and export the User model
 export const Users = mongoose.model<IUser>("Users", UserSchema);

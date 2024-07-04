@@ -8,16 +8,14 @@ import {
   isValidEmail,
   updateUserById,
 } from "../services/userService";
-import { IUser, Users } from "../models/userModel";
-import { MongoClient, ObjectId } from "mongodb";
-import {
-  generateAndSaveOTP,
-  generateRandomToken,
-} from "../helpers/GenerateRandomToken";
-import EmailSender from "../services/mail";
+import { Users } from "../models/userModel";
+import { ObjectId } from "mongodb";
+import { generateAndSaveOTP } from "../helpers/GenerateRandomToken";
 import { log } from "console";
 import JwtHelper from "../helpers/JwtHelper";
 import WalletService from "../services/walletService";
+import crypto from "crypto";
+import { Referral } from "../models/referralModel";
 
 /**
  * @class UserController
@@ -34,8 +32,15 @@ class UserController {
   static async createUser(req: Request, res: Response) {
     try {
       log(req.body);
-      const { firstName, lastName, email, number, password, confirmPassword } =
-        req.body;
+      const {
+        firstName,
+        lastName,
+        email,
+        number,
+        password,
+        confirmPassword,
+        referralCode,
+      } = req.body;
 
       if (
         !firstName ||
@@ -87,6 +92,7 @@ class UserController {
         password: hashedPassword,
         verified: false,
       };
+
       const newUser = await Users.create(userData);
 
       const user = newUser._id;
@@ -99,9 +105,36 @@ class UserController {
 
       const walletId = newWallet._id;
 
+      // Generate a unique referral code
+      const referralId = crypto.randomBytes(4).toString("hex");
+
+      let referral_Id;
+      if (referralCode) {
+        const referrer = await Users.findOne({ referralCode });
+
+        if (referrer) {
+          const referral = new Referral({
+            referrer: referrer._id,
+            referee: referralId,
+            referralCode,
+            reward: 0, // TODO: Set initial reward, can be updated later..... you can add it to admin settings so that you can set the reward value
+            status: "pending",
+          });
+
+          await referral.save();
+
+          referral_Id = referral._id;
+        }
+      }
+
       await Users.updateOne(
         { _id: user },
-        { $set: { wallet: new ObjectId(walletId) } }
+        {
+          $set: {
+            wallet: new ObjectId(walletId),
+            referral: new ObjectId(referral_Id),
+          },
+        }
       );
 
       const expiresIn = "30m";
