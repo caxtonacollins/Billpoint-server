@@ -1,12 +1,13 @@
 import { Router } from "express";
 import dataService from "../services/dataService";
+import dataController from "../controllers/dataController";
 
 const router = Router();
 
-router.get("/serviceId", dataService.getServiceId);
+router.get("/serviceId", dataController.getServiceId);
 
-router.get("/variationCode", dataService.getVariationCodes);
+router.get("/variationCode", dataController.getVariationCodes);
 
-router.post("/dataPurchase", dataService.buyData);
+router.post("/dataPurchase", dataController.purchaseData);
 
 export default router;

@@ -1,8 +1,8 @@
-import { Router } from 'express';
-import educationService from '../services/educationalService';
+import { Router } from "express";
+import eduController from "../controllers/educationController";
 
 const router = Router();
 
-router.post('/WAEC-tokenPurchase', educationService.educationPurchase);
+router.post("/WAEC-tokenPurchase", eduController.purchaseEdu);
 
 export default router;

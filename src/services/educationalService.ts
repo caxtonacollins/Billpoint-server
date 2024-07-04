@@ -15,7 +15,7 @@ const publicKey = process.env.VTPASS_PULIC_KEY;
 async function purchaseProduct(
   requestId: any,
   variationCode: string,
-  phone: string,
+  phone: number,
   amount: number,
   quantity: number
 ) {
@@ -43,9 +43,9 @@ async function purchaseProduct(
 
     const purchaseRes = await axios(configurations);
 
-   //  console.log("====================================");
-   //  console.log("purchaseRes:", purchaseRes);
-   //  console.log("====================================");
+    //  console.log("====================================");
+    //  console.log("purchaseRes:", purchaseRes);
+    //  console.log("====================================");
 
     return purchaseRes;
   } catch (error: any) {
@@ -55,11 +55,15 @@ async function purchaseProduct(
 }
 
 class educationService {
-  static async educationPurchase(req: Request, res: Response) {
+  static async educationPurchase(
+    user: string,
+    variationCode: string,
+    phone: number,
+    amount: number,
+    quantity: number
+  ) {
     try {
       const requestId = await generateRequestId();
-
-      const { user, variationCode, phone, amount, quantity } = req.body;
 
       const purchaseResponse = await purchaseProduct(
         requestId,
@@ -72,12 +76,7 @@ class educationService {
       if (
         purchaseResponse.data.response_description === "PRODUCT DOES NOT EXIST"
       ) {
-        return res
-          .status(200)
-          .json({
-            error: false,
-            message: "service not available at the moment 😌",
-          });
+        throw new Error("service not available at the moment 😌");
       }
 
       if (purchaseResponse.status === 200) {
@@ -113,10 +112,6 @@ class educationService {
             token,
           };
 
-          console.log("====================================");
-          console.log("transactionData:", transactionData);
-          console.log("====================================");
-
           // If transaction is successful, deduct the amount from the user's wallet balance
           if (
             transactionStatus === "delivered" ||
@@ -127,31 +122,24 @@ class educationService {
             await transactionService.createTransaction(transactionData);
 
             // Respond with success
-            res.status(200).json({ buyCable: eduResponse, queryResult });
+            return "success";
           } else if (transactionStatus === "pending") {
             await transactionService.createTransaction(transactionData);
+            return "pending";
           } else {
             await transactionService.createTransaction(transactionData);
             // Respond with error for unsuccessful transaction
-            console.error(
-              "Transaction failed:",
-              queryResult.response_description
-            );
-
-            res.status(400).json({
-              error: "Transaction failed",
-              details: queryResult.response_description,
-            });
+            return "failed";
           }
         } else {
-          res.status(401).json({ message: "Unauthorized" });
+          throw new Error("Unauthorized");
         }
       } else {
-        res.status(500).json({ error: "Failed to process the request" });
+        throw new Error("Failed to process the request");
       }
     } catch (error: any) {
       console.error(error);
-      res.status(500).json({ error: true, message: error.message });
+      throw error;
     }
   }
 }

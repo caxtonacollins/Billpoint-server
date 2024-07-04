@@ -25,40 +25,45 @@ async function purchaseProduct(
   phone: number,
   serviceID: string
 ) {
-   try {
-      const payload = {
-         request_id: requestId,
-         serviceID,
-         billersCode,
-         variation_code: variationCode,
-         amount,
-         phone,
-       };
-     
-       const configurations = {
-         method: "post",
-         url: `${apiUrl}/pay`,
-         headers: {
-           "api-key": apiKey,
-           "secret-key": secretKey,
-           "Content-Type": "application/json",
-         },
-         data: payload,
-       };
-     
-       return axios(configurations);
-   } catch (error: any) {
-      console.log(error);
-      throw new Error(error.messsage);
-   }
+  try {
+    const payload = {
+      request_id: requestId,
+      serviceID,
+      billersCode,
+      variation_code: variationCode,
+      amount,
+      phone,
+    };
+
+    const configurations = {
+      method: "post",
+      url: `${apiUrl}/pay`,
+      headers: {
+        "api-key": apiKey,
+        "secret-key": secretKey,
+        "Content-Type": "application/json",
+      },
+      data: payload,
+    };
+
+    return axios(configurations);
+  } catch (error: any) {
+    console.log(error);
+    throw new Error(error.messsage);
+  }
 }
 
 class electricService {
-  static async electricProduct(req: Request, res: Response) {
+  static async electricProduct(
+    user: string,
+    billersCode: string,
+    variationCode: string,
+    amount: number,
+    phone: number,
+    serviceID: string
+  ) {
     const requestId = await generateRequestId();
 
-    const { user, billersCode, variationCode, amount, phone } = req.body;
-    const serviceID = req.body.selectedServiceId;
     try {
       const purchaseResponse = await purchaseProduct(
         requestId,
@@ -111,36 +116,24 @@ class electricService {
             await transactionService.createTransaction(transactionData);
 
             // Respond with success
-            res
-              .status(200)
-              .json({ buyElectricity: buyElectricityResponse, queryResult });
+            return "success";
           } else if (transactionStatus === "pending") {
             await transactionService.createTransaction(transactionData);
+            return "pending";
           } else {
             await transactionService.createTransaction(transactionData);
             // Respond with error for unsuccessful transaction
-            console.error(
-              "Transaction failed:",
-              queryResult.response_description
-            );
-
-            res.status(400).json({
-              error: "Transaction failed",
-              details: queryResult.response_description,
-            });
+            return "faied";
           }
         } else {
-          res.status(500).json({
-            error: true,
-            message: "failed to requery transaction status",
-          });
+          throw new Error("failed to requery transaction status");
         }
       } else {
-        res.status(500).json({ error: "Failed to process the request" });
+        throw new Error("Failed to process the request");
       }
     } catch (error: any) {
       console.error(error);
-      res.status(500).json({ error: true, message: error.message });
+      throw error;
     }
   }
 }

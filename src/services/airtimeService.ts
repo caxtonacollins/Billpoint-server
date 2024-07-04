@@ -18,11 +18,14 @@ import walletService from "./walletService";
 import transactionService from "./transactionService";
 
 class airtimeService {
-  static buyAirtime = async (req: Request, res: Response) => {
+  static purchaseAirtime = async (
+    user: string,
+    serviceID: string,
+    amount: number,
+    phone: number
+  ) => {
     try {
       const request_id = await generateRequestId();
-
-      const { user, serviceID, amount, phone } = req.body;
 
       const payload = {
         request_id,
@@ -87,21 +90,15 @@ class airtimeService {
 
             // Respond with success
             // res.status(200).json({ error: false, Airtime: airtimeResponse, queryResult });
-            res.status(200).json({ error: false, message: airtimeResponse.content.transactions.status})
+            return "success";
           } else if (transactionStatus === "pending") {
             await transactionService.createTransaction(transactionData);
+
+            return "pending";
           } else {
             await transactionService.createTransaction(transactionData);
             // Respond with error for unsuccessful transaction
-            console.error(
-              "Transaction failed:",
-              queryResult.response_description
-            );
-
-            res.status(400).json({
-              error: "Transaction failed",
-              details: queryResult.response_description,
-            });
+            return "failed";
           }
         } else {
           // Respond with error for failed query
@@ -110,13 +107,12 @@ class airtimeService {
         }
       } else {
         // Respond with error for failed purchase
-        // console.error("Failed to purchase data:", purchaseResponse);
-
-        res.status(500).json({ error: "Failed to process the request" });
+        console.error("Failed to purchase data:", purchaseResponse);
+        throw new Error("Failed to process the request");
       }
     } catch (error: any) {
       console.error("Error:", error);
-      res.status(500).json({ error: true, message: error.message });
+      throw error;
     }
   };
 }

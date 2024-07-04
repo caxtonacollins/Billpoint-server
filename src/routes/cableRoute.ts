@@ -1,5 +1,5 @@
 import { Router } from "express";
-import cableController from "../services/cableService";
+import cableController from "../controllers/cableController";
 
 const router = Router();
 

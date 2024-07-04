@@ -19,7 +19,7 @@ async function purchaseProduct(
   phone: string,
   subscriptionType: string,
   amount: number,
-  quantity: number,
+  quantity: number
 ) {
   const payload = {
     request_id: requestId,
@@ -29,7 +29,7 @@ async function purchaseProduct(
     phone,
     subscription_type: subscriptionType,
     amount,
-    quantity
+    quantity,
   };
 
   const configurations = {
@@ -47,14 +47,18 @@ async function purchaseProduct(
 }
 
 class cableService {
-  static async cablePurchase(req: Request, res: Response) {
+  static async cablePurchase(
+    user: string,
+    billersCode: string,
+    variationCode: string,
+    phone: string,
+    subscriptionType: string,
+    amount: number,
+    quantity: number,
+    serviceID: string
+  ) {
     try {
       const requestId = await generateRequestId();
-
-      const { user, billersCode, variationCode, phone, subscriptionType, amount, quantity } =
-        req.body;
-
-      const serviceID = req.body.selectedServiceId;
 
       const purchaseResponse = await purchaseProduct(
         requestId,
@@ -112,31 +116,24 @@ class cableService {
             await transactionService.createTransaction(transactionData);
 
             // Respond with success
-            res.status(200).json({ buyCable: cableResponse, queryResult });
+            return "Success"
           } else if (transactionStatus === "pending") {
             await transactionService.createTransaction(transactionData);
+            return "Pending"
           } else {
             await transactionService.createTransaction(transactionData);
             // Respond with error for unsuccessful transaction
-            console.error(
-              "Transaction failed:",
-              queryResult.response_description
-            );
-
-            res.status(400).json({
-              error: "Transaction failed",
-              details: queryResult.response_description,
-            });
+            return "failed"
           }
         } else {
-          res.status(401).json({ message: "Unauthorized" });
+          throw new Error("Unauthorized");
         }
       } else {
-        res.status(500).json({ error: "Failed to process the request" });
+        throw new Error("Failed to process the request" );
       }
     } catch (error: any) {
       console.error(error);
-      res.status(500).json({ error: true, message: error.message });
+      throw error
     }
   }
 }

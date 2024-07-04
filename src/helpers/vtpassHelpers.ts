@@ -8,6 +8,56 @@ const secretKey = process.env.VTPASS_SECRET_KEY;
 const apiKey = process.env.VTPASS_API_KEY;
 const publicKey = process.env.VTPASS_PULIC_KEY;
 
+export async function getServiceId(identifier: string) {
+  try {
+
+    const basicAuth = Buffer.from(`${apiKey}:${publicKey}`).toString(
+      "base64"
+    );
+
+    // const identifier = 'tv-subscription';
+
+    if (!identifier) {
+      throw new Error("Identifier is required 🥲");
+    }
+
+    const url = `${process.env.VTPASS_SERVICE_ID}/services?identifier=${identifier}`;
+
+    const response = await axios.get(url, {
+      headers: { authorization: `Basic ${basicAuth}` },
+    });
+    const options = response.data.content;
+
+    return options ;
+  } catch (error: any) {
+    console.error("Error fetching VTpass serviceID", error);
+    throw error
+  }
+}
+
+export async function getVariationCodes(serviceID: string) {
+  try {
+    
+    const url = `${process.env.VTPASS_GET_VARIATION_CODES}?serviceID=${serviceID}`;
+
+    log("url:", url);
+
+    const basicAuth = Buffer.from(`${apiKey}:${publicKey}`).toString(
+      "base64"
+    );
+
+    const response = await axios.get(url, {
+      headers: { authorization: `Basic ${basicAuth}` },
+    });
+    const options = response.data;
+
+    return options
+  } catch (error: any) {
+    console.error("Error fetching VTpass variation codes:", error);
+    throw error;
+  }
+}
+
 export async function queryTransactionStatus(requestId: any) {
   const queryPayload = { request_id: requestId };
   const url = process.env.VTPASS_REQUERY;
