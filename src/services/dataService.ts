@@ -5,6 +5,7 @@ import walletService from "./walletService";
 import transactionService from "./transactionService";
 import { log } from "console";
 import { queryTransactionStatus } from "../helpers/vtpassHelpers";
+import PricingService from "./pricingService";
 
 /**
  * How to use your api keys:
@@ -79,7 +80,10 @@ class dataService {
           const reference = queryResult.content.transactions.transactionId;
           const status = queryResult.content.transactions.status;
 
-          const transactionData = {
+          let amountPlusAdminPercentage
+          let commission: number | undefined;;
+
+          let transactionData = {
             user,
             transactionType,
             details,
@@ -87,6 +91,7 @@ class dataService {
             transactionId: reference,
             status,
             date,
+            commission,
           };
 
           // If transaction is successful, deduct the amount from the user's wallet balance
@@ -94,8 +99,27 @@ class dataService {
             transactionStatus === "delivered" ||
             transactionStatus === "successful"
           ) {
-            await walletService.subtractMoneyFromWalet(user, amount);
+            let productType = "data";
 
+            const adminPrices = await PricingService.calculatePrice(
+              user,
+              productType,
+              amount
+            );
+
+            log("adminPrices:", adminPrices);
+
+            amountPlusAdminPercentage = adminPrices.finalAmount;
+            commission = adminPrices.chargeValue;
+
+            transactionData.amount = amountPlusAdminPercentage
+            transactionData.commission = commission;
+
+            await walletService.subtractMoneyFromWalet(
+              user,
+              amountPlusAdminPercentage
+            );
+            log("TransactionData:", transactionData);
             await transactionService.createTransaction(transactionData);
 
             // Respond with success

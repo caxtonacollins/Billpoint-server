@@ -10,10 +10,7 @@ const publicKey = process.env.VTPASS_PULIC_KEY;
 
 export async function getServiceId(identifier: string) {
   try {
-
-    const basicAuth = Buffer.from(`${apiKey}:${publicKey}`).toString(
-      "base64"
-    );
+    const basicAuth = Buffer.from(`${apiKey}:${publicKey}`).toString("base64");
 
     // const identifier = 'tv-subscription';
 
@@ -28,32 +25,43 @@ export async function getServiceId(identifier: string) {
     });
     const options = response.data.content;
 
-    return options ;
+    const modifiedOptions = options.map((option: any) => {
+      return {
+        serviceID: option.serviceID,
+        name: option.name,
+        image: option.image,
+      };
+    });
+
+    return modifiedOptions;
   } catch (error: any) {
     console.error("Error fetching VTpass serviceID", error);
-    throw error
+    throw error;
   }
 }
 
 export async function getVariationCodes(serviceID: string) {
   try {
-    
     const url = `${process.env.VTPASS_GET_VARIATION_CODES}?serviceID=${serviceID}`;
 
-    log("url:", url);
-
-    const basicAuth = Buffer.from(`${apiKey}:${publicKey}`).toString(
-      "base64"
-    );
+    const basicAuth = Buffer.from(`${apiKey}:${publicKey}`).toString("base64");
 
     const response = await axios.get(url, {
       headers: { authorization: `Basic ${basicAuth}` },
     });
     const options = response.data;
 
-    return options
+    const modifiedOptions = options.content.varations.map((option: any) => {
+      return {
+        variationCode: option.variation_code,
+        name: option.name,
+        variationAmount: option.variation_amount,
+        image: option.image,
+      };
+    });
+
+    return modifiedOptions;
   } catch (error: any) {
-    console.error("Error fetching VTpass variation codes:", error);
     throw error;
   }
 }

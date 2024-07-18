@@ -1,6 +1,9 @@
 import { Request, Response } from "express";
 import dataService from "../services/dataService";
 import { getServiceId, getVariationCodes } from "../helpers/vtpassHelpers";
+import PricingService from "../services/pricingService";
+import { verifyTransactionPin } from "../services/authService";
+import { Users } from "../models/userModel";
 
 class dataController {
   static async getServiceId(req: Request, res: Response) {
@@ -12,6 +15,7 @@ class dataController {
           .json({ error: true, message: "Identifier is required 🥲" });
       }
       const options = await getServiceId(identifier.toString());
+
       res.status(200).json({ error: false, data: options });
     } catch (error: any) {
       console.log(error);
@@ -34,7 +38,34 @@ class dataController {
 
   static async purchaseData(req: Request, res: Response) {
     try {
-      const { user, serviceID, variationCode, phone } = req.body;
+      const { user, serviceID, variationCode, phone, transactionPin } =
+        req.body;
+
+      const userData = await Users.findById(user);
+
+      if (!userData)
+        return res
+          .status(404)
+          .json({ error: true, message: "User not found 😒." });
+
+      if (userData.status === "suspended")
+        return res
+          .status(403)
+          .json({ error: true, message: "User is suspended 😢" });
+
+      if (userData.status === "inactive")
+        return res
+          .status(403)
+          .json({ error: true, message: "User is inactive 😢" });
+
+      const isPinVerified = await verifyTransactionPin(user, transactionPin);
+
+      if (isPinVerified !== true) {
+        return res
+          .status(403)
+          .json({ error: true, message: "Invalid transaction pin 😢" });
+      }
+
       const purchaseRes = await dataService.purchaseData(
         user,
         serviceID,

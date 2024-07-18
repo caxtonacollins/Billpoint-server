@@ -16,6 +16,7 @@ export const checkThatUserExistWithPhoneNumber = async (number: number) => {
 export const checkThatUserExistWithEmail = async (email: string) => {
   try {
     const user = await Users.findOne({ email }).populate("wallet");
+    
     return user;
   } catch (error: any) {
     console.error(error);
@@ -139,3 +140,7 @@ export const getCurrentAmountByEmail = async (email: string) => {
     throw error;
   }
 };
+
+export const comfirmUserTransactionPin = async(user: string) => {
+  
+}

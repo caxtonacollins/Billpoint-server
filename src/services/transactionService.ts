@@ -28,6 +28,8 @@ class TransactionService {
    * @param {object} data
    * @returns {Promise<UserTransactionDetails>}
    */
+
+  // Sending money to a billspoint account
   static async sendMoney(
     senderId: string,
     walletNumber: number,
@@ -99,6 +101,7 @@ class TransactionService {
       reason,
       recipient
     );
+    
     if (withdrawal) {
       // update sender wallet balance
       await updateWallet(userId, amount, "EXPENSE");

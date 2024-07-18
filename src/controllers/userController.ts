@@ -143,10 +143,14 @@ class UserController {
       };
       const token = JwtHelper.generateToken(payload, expiresIn);
 
+      const createdUser = await Users.findById(newUser._id).select(
+        "-password -transactionPin -__v"
+      );
+
       res.status(201).json({
         error: false,
         message: "User created successfully",
-        data: newUser,
+        data: createdUser,
         token,
       });
 

@@ -12,6 +12,7 @@ export interface IUser extends Document {
   verified: boolean;
   verificationOTP: number;
   transactionPin?: string;
+  status: string;
   otpCreationTime?: Date;
   role: string;
   referral?: string;
@@ -25,17 +26,21 @@ const UserSchema: Schema = new Schema({
   number: { type: String, required: true },
   password: { type: String, required: true },
   verified: { type: Boolean, default: false },
-  suspended: { type: Boolean, default: false },
   verificationOTP: { type: Number },
-  role: { type: String, enum: ['user', 'admin', 'agent'], default: 'user' },
-  wallet: { type: mongoose.Schema.Types.ObjectId, ref: 'Wallets' },
+  otpCreationTime: { type: Date },
+  transactionPin: { type: String },
+  role: { type: String, enum: ["user", "admin", "agent"], default: "user" },
+  wallet: { type: mongoose.Schema.Types.ObjectId, ref: "Wallets" },
   status: {
     type: String,
     required: true,
-    enum: ["Active", "Inactive"],
-    default: "Active",
+    enum: ["Active", "Inactive", "suspended"],
+    default: "Inactive",
   },
-  referral: { type: mongoose.Schema.Types.ObjectId, ref: 'Referral', required: true }
+  referral: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Referral",
+  },
 });
 
 export const Users = mongoose.model<IUser>("Users", UserSchema);

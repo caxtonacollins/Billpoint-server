@@ -13,9 +13,17 @@ export interface IWallet extends Document {
 const WalletSchema: Schema = new Schema({
   walletName: { type: String, required: true },
   balance: { type: Number, default: 0, required: true },
-  billPointAccountNum: { type: String},
-  monnifyAccountNum: { type: [String], unique: true, default: [] },
-  user: { type: mongoose.Schema.Types.ObjectId, ref: 'Users' },
+  billPointAccountNum: { type: String },
+  monnifyAccountNum: { 
+    type: [{
+      bankCode: { type: String },
+      bankName: { type: String },
+      accountNumber: { type: String },
+      accountName: { type: String },
+    }], 
+    default: [] 
+  },
+  user: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },
 });
 
 export const Wallets = mongoose.model<IWallet>("Wallets", WalletSchema);

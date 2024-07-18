@@ -16,6 +16,7 @@ import { queryTransactionStatus } from "../helpers/vtpassHelpers";
 import userController from "../controllers/userController";
 import walletService from "./walletService";
 import transactionService from "./transactionService";
+import { log } from "console";
 
 class airtimeService {
   static purchaseAirtime = async (
@@ -55,6 +56,8 @@ class airtimeService {
 
         // Query transaction status using the transaction ID
         const queryResponse = await queryTransactionStatus(requestId);
+
+        // log("queryResponse", queryResponse);
 
         // checking if the query was successful
         if (queryResponse.status === 200) {

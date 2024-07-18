@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { getServiceId, getVariationCodes } from "../helpers/vtpassHelpers";
 import airtimeService from "../services/airtimeService";
+import { log } from "console";
 
 class airtimeController {
   static async getServiceId(req: Request, res: Response) {
@@ -34,6 +35,7 @@ class airtimeController {
 
   static async purchaseAirtime(req: Request, res: Response) {
     try {
+      log('request purchase:', req.body);
       const { user, serviceID, amount, phone } = req.body;
 
       const purchaseRes = await airtimeService.purchaseAirtime(

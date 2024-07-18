@@ -29,6 +29,7 @@ export interface ITransaction extends Document {
   amount: number;
   date: Date;
   token?: string;
+  commission: number;
 }
 
 const TransactionSchema: Schema = new Schema({
@@ -57,6 +58,7 @@ const TransactionSchema: Schema = new Schema({
     required: true,
   },
   amount: { type: Number, required: true },
+  commission: { type: String },
   token: { type: String },
   date: { type: Date, required: true },
 });

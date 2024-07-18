@@ -9,7 +9,7 @@ import "dotenv/config";
 import mongoose from "mongoose";
 import { logger } from "./config/wistonLogger";
 import { log } from "console";
-import WalletService from "./services/walletService";
+import { initSocket } from './controllers/notificationController';
 import { Server } from 'socket.io';
 import http from 'http';
 
@@ -17,18 +17,18 @@ import http from 'http';
 dotenv.config();
 
 const allowedOrigins = ["http://192.168.1.168:8081"];
-const corsOptions = {
-  origin: allowedOrigins,
-  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-  allowedHeaders: [
-    "Origin",
-    "X-Requested-With",
-    "Content-Type",
-    "Accept",
-    "Authorization",
-  ],
-  credentials: true,
-};
+// const corsOptions = {
+//   origin: allowedOrigins,
+//   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+//   allowedHeaders: [
+//     "Origin",
+//     "X-Requested-With",
+//     "Content-Type",
+//     "Accept",
+//     "Authorization",
+//   ],
+//   credentials: true,
+// };
 
 const app: Application = express();
 const server = http.createServer(app);
@@ -73,6 +73,11 @@ app.use((req: Request, res: Response, next: NextFunction) => {
   next();
 });
 
+app.post("/monnify/webhook", async (req: Request, res: Response) => {
+  res.status(200);
+  // monnifyService.handleWebhook(req.body);
+})
+
 app.use("/api/v1", Routes);
 
 io.on('connection', (socket) => {
@@ -83,25 +88,6 @@ io.on('connection', (socket) => {
 });
 
 // Passing the Socket.IO instance to the notification controller
-import { initSocket } from './controllers/notificationController';
 initSocket(io);
-
-async function main() {
-  try {
-    // const user = {
-    //   _id: "668086d2bb9369e95bf5e95a",
-    //   firstName: "string",
-    //   lastName: "string",
-    //   email: "string2@gmail.com",
-    //   number: "08628798897",
-    // };
-    // const newAccount = await createReserveAccount(user);
-    // log("New Account: ", newAccount);
-  } catch (error) {
-    console.error("Error creating reserve account:", error);
-  }
-}
-
-main();
 
 export { app };

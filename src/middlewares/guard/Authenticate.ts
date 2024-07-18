@@ -41,7 +41,7 @@ export const Authenticate = async (
       const userId = decoded.userId;
       const user = await Users.findOne({ _id: new ObjectId(userId) });
 
-      log("user", user);
+      // log("user", user);
 
       if (!user) {
         throw new Error("User not found");
