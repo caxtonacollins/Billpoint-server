@@ -41,11 +41,11 @@ var bankDetailsController = /** @class */ (function () {
     function bankDetailsController() {
     }
     bankDetailsController.createOrUpdateBankDetails = function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
-        var _a, bankName, accountNumber, user, isBankDetails;
+        var _a, bankName, bankCode, accountNumber, user, isBankDetails;
         return __generator(this, function (_b) {
             switch (_b.label) {
                 case 0:
-                    _a = req.body, bankName = _a.bankName, accountNumber = _a.accountNumber;
+                    _a = req.body, bankName = _a.bankName, bankCode = _a.bankCode, accountNumber = _a.accountNumber;
                     if (!req.user || !req.user._id) {
                         return [2 /*return*/, res.status(401).json({ error: true, message: "Unauthorized" })];
                     }
@@ -56,6 +56,7 @@ var bankDetailsController = /** @class */ (function () {
                     if (!!isBankDetails) return [3 /*break*/, 3];
                     return [4 /*yield*/, bankDetailsModel_1.BankDetails.create({
                             user: user,
+                            bankCode: bankCode,
                             bankName: bankName,
                             accountNumber: accountNumber
                         })];
@@ -68,6 +69,7 @@ var bankDetailsController = /** @class */ (function () {
                     // Update existing bank details
                     isBankDetails.bankName = bankName;
                     isBankDetails.accountNumber = accountNumber;
+                    isBankDetails.bankCode = bankCode;
                     return [4 /*yield*/, isBankDetails.save()];
                 case 4:
                     _b.sent();

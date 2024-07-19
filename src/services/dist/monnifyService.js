@@ -36,10 +36,11 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 exports.__esModule = true;
-exports.getAllBanks = exports.getAllTransfer = exports.getWalletBalance = exports.getTransferStatus = exports.initiateTransfer = exports.getReservedAccountDetails = exports.createReserveAccount = void 0;
+exports.authorizeTransfer = exports.getAllBanks = exports.getAllTransfer = exports.getWalletBalance = exports.getTransferStatus = exports.initiateTransfer = exports.getReservedAccountDetails = exports.createReserveAccount = void 0;
 var axios_1 = require("axios");
 var console_1 = require("console");
 var dotenv_1 = require("dotenv");
+var crypto = require("crypto");
 dotenv_1["default"].config();
 /**
  * generate monnify access token
@@ -53,7 +54,6 @@ var getAccessToken = function () { return __awaiter(void 0, void 0, void 0, func
                 key = process.env.MONNIFY_API_KEY;
                 secret = process.env.MONNIFY_SECRET_KEY;
                 accessToken = process.env.MONNIFY_ACCESSTOKEN_URL;
-                console_1.log(key, secret, accessToken);
                 if (!key || !secret || !accessToken) {
                     throw new Error("Please make sure all environment variables are defined.");
                 }
@@ -71,6 +71,17 @@ var getAccessToken = function () { return __awaiter(void 0, void 0, void 0, func
         }
     });
 }); };
+var generateReference = function () { return __awaiter(void 0, void 0, void 0, function () {
+    var uniqueID, cleanedId, reference;
+    return __generator(this, function (_a) {
+        uniqueID = crypto.randomBytes(16).toString("base64");
+        cleanedId = uniqueID.replace(/[^a-zA-Z0-9]/g, "");
+        reference = "Bilpoint" + cleanedId;
+        return [2 /*return*/, reference];
+    });
+}); };
+// Example usage
+// generateReference().then(reference => console.log('Generated Reference:', reference));
 exports.createReserveAccount = function (user) { return __awaiter(void 0, void 0, void 0, function () {
     var accessToken, firstName, firstThreeLetters, accountName, payload, configurations, response, accountDetails, accountNumbers, walletUpdateDate, error_1;
     return __generator(this, function (_a) {
@@ -175,18 +186,22 @@ exports.getReservedAccountDetails = function (userId) { return __awaiter(void 0,
         }
     });
 }); };
-exports.initiateTransfer = function (user, amount, narration, destinationBankCode, destinationAccountNumber, sourceAccountNumber, destinationAccountName) { return __awaiter(void 0, void 0, void 0, function () {
-    var accessToken, payload, configurations, response, error_3;
+exports.initiateTransfer = function (transferData) { return __awaiter(void 0, void 0, void 0, function () {
+    var accessToken, reference, amount, narration, destinationBankCode, destinationAccountNumber, sourceAccountNumber, destinationAccountName, payload, configurations, response, error_3;
     return __generator(this, function (_a) {
         switch (_a.label) {
             case 0:
-                _a.trys.push([0, 3, , 4]);
+                _a.trys.push([0, 4, , 5]);
                 return [4 /*yield*/, getAccessToken()];
             case 1:
                 accessToken = _a.sent();
+                return [4 /*yield*/, generateReference()];
+            case 2:
+                reference = _a.sent();
+                amount = transferData.amount, narration = transferData.narration, destinationBankCode = transferData.destinationBankCode, destinationAccountNumber = transferData.destinationAccountNumber, sourceAccountNumber = transferData.sourceAccountNumber, destinationAccountName = transferData.destinationAccountName;
                 payload = {
                     amount: amount,
-                    reference: user._id,
+                    reference: reference,
                     narration: narration,
                     destinationBankCode: destinationBankCode,
                     destinationAccountNumber: destinationAccountNumber,
@@ -204,14 +219,37 @@ exports.initiateTransfer = function (user, amount, narration, destinationBankCod
                     data: payload
                 };
                 return [4 /*yield*/, axios_1["default"](configurations)];
-            case 2:
-                response = _a.sent();
-                return [2 /*return*/, response.data];
             case 3:
+                response = _a.sent();
+                console_1.log('initiateTransfer:', response.data);
+                return [2 /*return*/, response.data];
+            case 4:
                 error_3 = _a.sent();
-                console_1.log(error_3);
+                if (error_3.response) {
+                    // The request was made and the server responded with a status code
+                    // that falls out of the range of 2xx
+                    console.error("Error response data:", error_3.response.data);
+                    console.error("Error response status:", error_3.response.status);
+                    console.error("Error response headers:", error_3.response.headers);
+                    if (error_3.response.status === 404) {
+                        // Handle 404 error specifically
+                        console.error("Resource not found:", error_3.response.data.responseMessage);
+                    }
+                    else {
+                        // Handle other HTTP errors
+                        console.error("An error occurred:", error_3.message);
+                    }
+                }
+                else if (error_3.request) {
+                    // The request was made but no response was received
+                    console.error("No response received:", error_3.request);
+                }
+                else {
+                    // Something happened in setting up the request that triggered an Error
+                    console.error("Error setting up request:", error_3.message);
+                }
                 throw new Error(error_3);
-            case 4: return [2 /*return*/];
+            case 5: return [2 /*return*/];
         }
     });
 }); };
@@ -223,7 +261,7 @@ exports.getTransferStatus = function (reference) { return __awaiter(void 0, void
             case 1:
                 accessToken = _a.sent();
                 API_URL = process.env.MONNIFY_GET_TRANSFER_STATUS;
-                path = API_URL + "?reference=" + { reference: reference };
+                path = API_URL + "?reference=" + reference;
                 headers = {
                     "Content-Type": "application/json",
                     Authorization: "Bearer " + accessToken
@@ -251,7 +289,7 @@ exports.getWalletBalance = function (walletAccountNumber) { return __awaiter(voi
             case 1:
                 accessToken = _a.sent();
                 API_URL = process.env.MONNIFY_WALLET_BALANCE_URL;
-                path = API_URL + "?accountNumber=" + { walletAccountNumber: walletAccountNumber };
+                path = API_URL + "?accountNumber=" + walletAccountNumber;
                 headers = {
                     "Content-Type": "application/json",
                     Authorization: "Bearer " + accessToken
@@ -326,6 +364,64 @@ exports.getAllBanks = function () { return __awaiter(void 0, void 0, void 0, fun
                 error_7 = _a.sent();
                 console_1.log(error_7);
                 throw new Error(error_7);
+            case 4: return [2 /*return*/];
+        }
+    });
+}); };
+exports.authorizeTransfer = function (authData) { return __awaiter(void 0, void 0, void 0, function () {
+    var accessToken, authorizationCode, reference, payload, configurations, response, error_8;
+    return __generator(this, function (_a) {
+        switch (_a.label) {
+            case 0:
+                _a.trys.push([0, 3, , 4]);
+                return [4 /*yield*/, getAccessToken()];
+            case 1:
+                accessToken = _a.sent();
+                authorizationCode = authData.authorizationCode, reference = authData.reference;
+                payload = {
+                    authorizationCode: authorizationCode,
+                    reference: reference
+                };
+                configurations = {
+                    method: "post",
+                    url: process.env.MONNIFY_AUTHORIZE_TRANSFER,
+                    headers: {
+                        Authorization: "Bearer " + accessToken,
+                        "Content-Type": "application/json"
+                    },
+                    data: payload
+                };
+                return [4 /*yield*/, axios_1["default"](configurations)];
+            case 2:
+                response = _a.sent();
+                console_1.log('initiateTransfer:', response.data);
+                return [2 /*return*/, response.data];
+            case 3:
+                error_8 = _a.sent();
+                if (error_8.response) {
+                    // The request was made and the server responded with a status code
+                    // that falls out of the range of 2xx
+                    console.error("Error response data:", error_8.response.data);
+                    console.error("Error response status:", error_8.response.status);
+                    console.error("Error response headers:", error_8.response.headers);
+                    if (error_8.response.status === 404) {
+                        // Handle 404 error specifically
+                        console.error("Resource not found:", error_8.response.data.responseMessage);
+                    }
+                    else {
+                        // Handle other HTTP errors
+                        console.error("An error occurred:", error_8.message);
+                    }
+                }
+                else if (error_8.request) {
+                    // The request was made but no response was received
+                    console.error("No response received:", error_8.request);
+                }
+                else {
+                    // Something happened in setting up the request that triggered an Error
+                    console.error("Error setting up request:", error_8.message);
+                }
+                throw new Error(error_8);
             case 4: return [2 /*return*/];
         }
     });

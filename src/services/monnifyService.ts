@@ -2,14 +2,22 @@ import axios from "axios";
 import { log } from "console";
 import dotenv from "dotenv";
 import { IUser } from "../models/userModel";
+const crypto = require("crypto");
 
 dotenv.config();
 
-interface initiateTransferResponse {
-  requestSuccessful: boolean;
-  responseMessage: string;
-  responseCode: string;
-  responseBody: object;
+interface initiateTransferArgs {
+  amount: number;
+  narration: string;
+  destinationBankCode: string;
+  destinationAccountNumber: string;
+  sourceAccountNumber: string;
+  destinationAccountName: string;
+}
+
+interface authDataArgs {
+  reference: string;
+  authorizationCode: string
 }
 
 /**
@@ -20,8 +28,6 @@ const getAccessToken = async () => {
   const key = process.env.MONNIFY_API_KEY;
   const secret = process.env.MONNIFY_SECRET_KEY;
   const accessToken = process.env.MONNIFY_ACCESSTOKEN_URL;
-
-  log(key, secret, accessToken);
 
   if (!key || !secret || !accessToken) {
     throw new Error("Please make sure all environment variables are defined.");
@@ -42,6 +48,22 @@ const getAccessToken = async () => {
   );
   return response.data.responseBody.accessToken;
 };
+
+const generateReference = async () => {
+  // Generate a unique ID using crypto.randomBytes and encode it in base64
+  const uniqueID = crypto.randomBytes(16).toString("base64");
+
+  // Replace non-alphanumeric characters with an empty string
+  const cleanedId = uniqueID.replace(/[^a-zA-Z0-9]/g, "");
+
+  // Add a custom preffix
+  const reference = "Bilpoint" + cleanedId;
+
+  return reference;
+};
+
+// Example usage
+// generateReference().then(reference => console.log('Generated Reference:', reference));
 
 export const createReserveAccount = async (user: IUser) => {
   try {
@@ -138,21 +160,23 @@ export const getReservedAccountDetails = async (userId: any) => {
   }
 };
 
-export const initiateTransfer = async (
-  user: IUser,
-  amount: number,
-  narration: string,
-  destinationBankCode: string,
-  destinationAccountNumber: string,
-  sourceAccountNumber: string,
-  destinationAccountName: string
-) => {
+export const initiateTransfer = async (transferData: initiateTransferArgs) => {
   try {
     const accessToken = await getAccessToken();
+    const reference = await generateReference();
+
+    const {
+      amount,
+      narration,
+      destinationBankCode,
+      destinationAccountNumber,
+      sourceAccountNumber,
+      destinationAccountName,
+    } = transferData;
 
     const payload = {
       amount,
-      reference: user._id,
+      reference,
       narration,
       destinationBankCode,
       destinationAccountNumber,
@@ -173,9 +197,35 @@ export const initiateTransfer = async (
 
     const response = await axios(configurations);
 
+    log('initiateTransfer:', response.data)
+
     return response.data;
   } catch (error: any) {
-    log(error);
+    if (error.response) {
+      // The request was made and the server responded with a status code
+      // that falls out of the range of 2xx
+      console.error("Error response data:", error.response.data);
+      console.error("Error response status:", error.response.status);
+      console.error("Error response headers:", error.response.headers);
+
+      if (error.response.status === 404) {
+        // Handle 404 error specifically
+        console.error(
+          "Resource not found:",
+          error.response.data.responseMessage
+        );
+      } else {
+        // Handle other HTTP errors
+        console.error("An error occurred:", error.message);
+      }
+    } else if (error.request) {
+      // The request was made but no response was received
+      console.error("No response received:", error.request);
+    } else {
+      // Something happened in setting up the request that triggered an Error
+      console.error("Error setting up request:", error.message);
+    }
+
     throw new Error(error);
   }
 };
@@ -184,7 +234,7 @@ export const getTransferStatus = async (reference: string) => {
   const accessToken = await getAccessToken();
   const API_URL = process.env.MONNIFY_GET_TRANSFER_STATUS;
 
-  let path = `${API_URL}?reference=${{ reference }}`;
+  let path = `${API_URL}?reference=${ reference }`;
 
   const headers = {
     "Content-Type": "application/json",
@@ -205,7 +255,7 @@ export const getWalletBalance = async (walletAccountNumber: string) => {
   const accessToken = await getAccessToken();
   const API_URL = process.env.MONNIFY_WALLET_BALANCE_URL;
 
-  let path = `${API_URL}?accountNumber=${{ walletAccountNumber }}`;
+  let path = `${API_URL}?accountNumber=${ walletAccountNumber }`;
 
   const headers = {
     "Content-Type": "application/json",
@@ -259,10 +309,71 @@ export const getAllBanks = async () => {
     };
 
     const response = await axios(configurations);
-log(response.data)
+    log(response.data);
     return response.data;
   } catch (error: any) {
     log(error);
     throw new Error(error);
   }
 };
+
+export const authorizeTransfer = async (authData: authDataArgs) => {
+  try {
+    const accessToken = await getAccessToken();
+
+    const {
+      authorizationCode,
+      reference,
+    } = authData;
+
+    const payload = {
+      authorizationCode,
+      reference,
+    };
+
+    const configurations = {
+      method: "post",
+      url: process.env.MONNIFY_AUTHORIZE_TRANSFER,
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      data: payload,
+    };
+
+    const response = await axios(configurations);
+
+    log('initiateTransfer:', response.data)
+
+    return response.data;
+  } catch (error: any) {
+    if (error.response) {
+      // The request was made and the server responded with a status code
+      // that falls out of the range of 2xx
+      console.error("Error response data:", error.response.data);
+      console.error("Error response status:", error.response.status);
+      console.error("Error response headers:", error.response.headers);
+
+      if (error.response.status === 404) {
+        // Handle 404 error specifically
+        console.error(
+          "Resource not found:",
+          error.response.data.responseMessage
+        );
+      } else {
+        // Handle other HTTP errors
+        console.error("An error occurred:", error.message);
+      }
+    } else if (error.request) {
+      // The request was made but no response was received
+      console.error("No response received:", error.request);
+    } else {
+      // Something happened in setting up the request that triggered an Error
+      console.error("Error setting up request:", error.message);
+    }
+
+    throw new Error(error);
+  }
+};
+
+

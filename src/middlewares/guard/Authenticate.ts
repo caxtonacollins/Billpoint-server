@@ -50,7 +50,7 @@ export const Authenticate = async (
       (req as IUserRequest).user = user; // Attach the decoded user information to the request object
       next();
     } catch (error) {
-      return res.status(400).json({ error: true, message: "Invalid token" });
+      return res.status(400).json({ error: true, message: "Invalid token or expired authentication token" });
     }
   } catch (err) {
     next(err);

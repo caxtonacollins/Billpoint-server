@@ -36,11 +36,10 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 exports.__esModule = true;
-// import { ICreateTransaction } from "../interfaces/ICreateTransaction";
-// import PaystackService from "./external/paystack";
 var bankDetailsModel_1 = require("../models/bankDetailsModel");
 var transactionModel_1 = require("../models/transactionModel");
 var wallet_model_1 = require("../models/wallet.model");
+var monnifyService_1 = require("./monnifyService");
 var paystack_1 = require("./paystack");
 var walletService_1 = require("./walletService");
 /**
@@ -78,7 +77,7 @@ var TransactionService = /** @class */ (function () {
     // Sending money to a billspoint account
     TransactionService.sendMoney = function (senderId, walletNumber, amount) {
         return __awaiter(this, void 0, void 0, function () {
-            var senderWallet, receiverWallet;
+            var senderWallet, receiverWallet, receiverUserId;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0: return [4 /*yield*/, wallet_model_1.Wallets.findOne({ user: senderId })];
@@ -86,6 +85,9 @@ var TransactionService = /** @class */ (function () {
                         senderWallet = _a.sent();
                         return [4 /*yield*/, wallet_model_1.Wallets.findOne({
                                 billPointAccountNum: walletNumber
+                            }).populate({
+                                path: "user",
+                                select: "_id"
                             })];
                     case 2:
                         receiverWallet = _a.sent();
@@ -98,10 +100,9 @@ var TransactionService = /** @class */ (function () {
                     case 3:
                         // update sender wallet balance
                         _a.sent();
-                        //update receiver wallet balance
-                        return [4 /*yield*/, walletService_1.updateWallet(receiverWallet.user, amount, "INCOME")];
+                        receiverUserId = receiverWallet.user._id;
+                        return [4 /*yield*/, walletService_1.updateWallet(receiverUserId, amount, "INCOME")];
                     case 4:
-                        //update receiver wallet balance
                         _a.sent();
                         return [2 /*return*/, true];
                     case 5: return [2 /*return*/];
@@ -136,12 +137,47 @@ var TransactionService = /** @class */ (function () {
      * @param {object} data
      * @returns {Promise<UserTransactionDetails>}
      */
-    TransactionService.withdrawWalletBalance = function (userId, amount, reason, recipient) {
+    // Paystack
+    // static async withdrawWalletBalance(
+    //   userId: string,
+    //   amount: number,
+    //   reason: string,
+    //   recipient: string
+    // ) {
+    //   const userWallet = await Wallets.findOne({ user: userId });
+    //   const userBank = await BankDetails.findOne({ user: userId });
+    //   if (!userWallet) {
+    //     throw new Error("User wallet not found");
+    //   }
+    //   if (!userBank) {
+    //     throw new Error("add bank account");
+    //   }
+    //   if (userWallet.balance < amount) {
+    //     throw new Error("insufficient balance");
+    //   }
+    //   const withdrawal = await PaystackService.makePayment(
+    //     amount,
+    //     reason,
+    //     recipient
+    //   );
+    //   if (withdrawal) {
+    //     // update sender wallet balance
+    //     await updateWallet(userId, amount, "EXPENSE");
+    //     return withdrawal;
+    //   }
+    // }
+    // Monnify
+    TransactionService.withdrawWalletBalance = function (userId, amount, narration) {
         return __awaiter(this, void 0, void 0, function () {
-            var userWallet, userBank, withdrawal;
+            var userWallet, userBank, firstName, lastName, destinationAccountName, transferData, withdrawal, error_1;
             return __generator(this, function (_a) {
                 switch (_a.label) {
-                    case 0: return [4 /*yield*/, wallet_model_1.Wallets.findOne({ user: userId })];
+                    case 0:
+                        _a.trys.push([0, 6, , 7]);
+                        return [4 /*yield*/, wallet_model_1.Wallets.findOne({ user: userId }).populate({
+                                path: "user",
+                                select: "firstName lastName"
+                            })];
                     case 1:
                         userWallet = _a.sent();
                         return [4 /*yield*/, bankDetailsModel_1.BankDetails.findOne({ user: userId })];
@@ -151,22 +187,36 @@ var TransactionService = /** @class */ (function () {
                             throw new Error("User wallet not found");
                         }
                         if (!userBank) {
-                            throw new Error("add bank account");
+                            throw new Error("Bank account not added");
                         }
                         if (userWallet.balance < amount) {
-                            throw new Error("insufficient balance");
+                            throw new Error("Insufficient balance");
                         }
-                        return [4 /*yield*/, paystack_1["default"].makePayment(amount, reason, recipient)];
+                        firstName = userWallet.user.firstName;
+                        lastName = userWallet.user.lastName;
+                        destinationAccountName = firstName + " " + lastName;
+                        transferData = {
+                            amount: amount,
+                            narration: narration,
+                            destinationBankCode: userBank.bankCode,
+                            destinationAccountNumber: userBank.accountNumber,
+                            sourceAccountNumber: "1554898284",
+                            destinationAccountName: destinationAccountName
+                        };
+                        return [4 /*yield*/, monnifyService_1.initiateTransfer(transferData)];
                     case 3:
                         withdrawal = _a.sent();
                         if (!withdrawal) return [3 /*break*/, 5];
-                        // update sender wallet balance
                         return [4 /*yield*/, walletService_1.updateWallet(userId, amount, "EXPENSE")];
                     case 4:
-                        // update sender wallet balance
                         _a.sent();
                         return [2 /*return*/, withdrawal];
-                    case 5: return [2 /*return*/];
+                    case 5: return [3 /*break*/, 7];
+                    case 6:
+                        error_1 = _a.sent();
+                        console.error("Error during withdrawal:", error_1.message);
+                        throw new Error(error_1.message);
+                    case 7: return [2 /*return*/];
                 }
             });
         });

@@ -3,7 +3,7 @@ import { Request, Response } from "express";
 
 class bankDetailsController {
   static createOrUpdateBankDetails = async (req: any, res: Response) => {
-    const { bankName, accountNumber } = req.body;
+    const { bankName, bankCode, accountNumber } = req.body;
 
     if (!req.user || !req.user._id) {
       return res.status(401).json({ error: true, message: "Unauthorized" });
@@ -16,6 +16,7 @@ class bankDetailsController {
     if (!isBankDetails) {
       await BankDetails.create({
         user,
+        bankCode,
         bankName,
         accountNumber,
       });
@@ -27,6 +28,7 @@ class bankDetailsController {
     // Update existing bank details
     isBankDetails.bankName = bankName;
     isBankDetails.accountNumber = accountNumber;
+    isBankDetails.bankCode = bankCode;
     await isBankDetails.save();
 
     return res

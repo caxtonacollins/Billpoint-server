@@ -1,8 +1,11 @@
 // import { ICreateTransaction } from "../interfaces/ICreateTransaction";
 // import PaystackService from "./external/paystack";
-import { BankDetails } from "../models/bankDetailsModel";
+import { log } from "console";
+import { BankDetails, IBankDetails } from "../models/bankDetailsModel";
 import { Transactions } from "../models/transactionModel";
-import { Wallets } from "../models/wallet.model";
+import { IUser } from "../models/userModel";
+import { IWallet, Wallets } from "../models/wallet.model";
+import { initiateTransfer } from "./monnifyService";
 import PaystackService from "./paystack";
 import WalletService, { updateWallet } from "./walletService";
 
@@ -38,6 +41,9 @@ class TransactionService {
     const senderWallet = await Wallets.findOne({ user: senderId });
     const receiverWallet = await Wallets.findOne({
       billPointAccountNum: walletNumber,
+    }).populate({
+      path: "user",
+      select: "_id",
     });
     if (senderWallet && receiverWallet) {
       if (senderWallet.balance < amount) {
@@ -47,7 +53,8 @@ class TransactionService {
       await updateWallet(senderId, amount, "EXPENSE");
 
       //update receiver wallet balance
-      await updateWallet(receiverWallet.user, amount, "INCOME");
+      const receiverUserId = (receiverWallet.user as IUser)._id;
+      await updateWallet(receiverUserId, amount, "INCOME");
 
       return true;
     }
@@ -76,39 +83,92 @@ class TransactionService {
    * @param {object} data
    * @returns {Promise<UserTransactionDetails>}
    */
+  // Paystack
+  // static async withdrawWalletBalance(
+  //   userId: string,
+  //   amount: number,
+  //   reason: string,
+  //   recipient: string
+  // ) {
+  //   const userWallet = await Wallets.findOne({ user: userId });
+  //   const userBank = await BankDetails.findOne({ user: userId });
+  //   if (!userWallet) {
+  //     throw new Error("User wallet not found");
+  //   }
+
+  //   if (!userBank) {
+  //     throw new Error("add bank account");
+  //   }
+
+  //   if (userWallet.balance < amount) {
+  //     throw new Error("insufficient balance");
+  //   }
+
+  //   const withdrawal = await PaystackService.makePayment(
+  //     amount,
+  //     reason,
+  //     recipient
+  //   );
+
+  //   if (withdrawal) {
+  //     // update sender wallet balance
+  //     await updateWallet(userId, amount, "EXPENSE");
+
+  //     return withdrawal;
+  //   }
+  // }
+
+  // Monnify
   static async withdrawWalletBalance(
     userId: string,
     amount: number,
-    reason: string,
-    recipient: string
-  ) {
-    const userWallet = await Wallets.findOne({ user: userId });
-    const userBank = await BankDetails.findOne({ user: userId });
-    if (!userWallet) {
-      throw new Error("User wallet not found");
-    }
+    narration: string
+) {
+    try {
+        const userWallet = await Wallets.findOne<IWallet>({ user: userId }).populate<{ user: IUser }>({
+            path: "user",
+            select: "firstName lastName",
+        });
 
-    if (!userBank) {
-      throw new Error("add bank account");
-    }
+        const userBank = await BankDetails.findOne<IBankDetails>({ user: userId });
 
-    if (userWallet.balance < amount) {
-      throw new Error("insufficient balance");
-    }
+        if (!userWallet) {
+            throw new Error("User wallet not found");
+        }
 
-    const withdrawal = await PaystackService.makePayment(
-      amount,
-      reason,
-      recipient
-    );
-    
-    if (withdrawal) {
-      // update sender wallet balance
-      await updateWallet(userId, amount, "EXPENSE");
+        if (!userBank) {
+            throw new Error("Bank account not added");
+        }
 
-      return withdrawal;
+        if (userWallet.balance < amount) {
+            throw new Error("Insufficient balance");
+        }
+
+        const firstName = userWallet.user.firstName;
+        const lastName = userWallet.user.lastName;
+        const destinationAccountName = `${firstName} ${lastName}`;
+
+        const transferData = {
+            amount,
+            narration,
+            destinationBankCode: userBank.bankCode,
+            destinationAccountNumber: userBank.accountNumber,
+            sourceAccountNumber: "1554898284",
+            destinationAccountName,
+        };
+
+        const withdrawal = await initiateTransfer(transferData);
+
+        if (withdrawal) {
+            await updateWallet(userId, amount, "EXPENSE");
+            return withdrawal;
+        }
+    } catch (error: any) {
+        console.error("Error during withdrawal:", error.message);
+        throw new Error(error.message);
     }
-  }
+}
+
 
   /**
    * @method sendMoneyToBank

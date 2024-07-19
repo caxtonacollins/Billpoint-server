@@ -40,7 +40,7 @@ var mongodb_1 = require("mongodb");
 var transactionModel_1 = require("../models/transactionModel");
 var transactionService_1 = require("../services/transactionService");
 var paystack_1 = require("../services/paystack");
-var console_1 = require("console");
+var monnifyService_1 = require("../services/monnifyService");
 /**
  * @class TransactionController
  */
@@ -174,31 +174,34 @@ var TransactionController = /** @class */ (function () {
      */
     TransactionController.withDrawFromWallet = function (req, res, next) {
         return __awaiter(this, void 0, void 0, function () {
-            var userId, _a, amount, recipient, reason, withdrawal, err_4;
-            return __generator(this, function (_b) {
-                switch (_b.label) {
+            var userId, amount, narration, withdrawal, error_1;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
                     case 0:
                         userId = req.user.id;
-                        _a = req.body, amount = _a.amount, recipient = _a.recipient;
-                        reason = "withrawal from wallet";
-                        _b.label = 1;
+                        amount = req.body.amount;
+                        narration = "withrawal from wallet";
+                        _a.label = 1;
                     case 1:
-                        _b.trys.push([1, 3, , 4]);
-                        return [4 /*yield*/, transactionService_1["default"].withdrawWalletBalance(userId, amount, reason, recipient)];
+                        _a.trys.push([1, 3, , 4]);
+                        return [4 /*yield*/, transactionService_1["default"].withdrawWalletBalance(userId, amount, narration)];
                     case 2:
-                        withdrawal = _b.sent();
+                        withdrawal = _a.sent();
                         if (withdrawal) {
                             res
                                 .status(200)
-                                .json({ error: false, message: "require third party API" });
+                                .json({ error: false, message: "withdrawal successful" });
+                        }
+                        else {
+                            res.status(400).json({ error: true, message: "Withdrawal failed" });
                         }
                         return [3 /*break*/, 4];
                     case 3:
-                        err_4 = _b.sent();
-                        console_1.log(err_4);
+                        error_1 = _a.sent();
+                        console.error("Error occurred:", error_1.message);
                         res
-                            .status(200)
-                            .json({ error: false, message: err_4.message });
+                            .status(500)
+                            .json({ error: true, message: "An internal error occurred" });
                         return [3 /*break*/, 4];
                     case 4: return [2 /*return*/];
                 }
@@ -216,7 +219,7 @@ var TransactionController = /** @class */ (function () {
      */
     TransactionController.sendMoneyToUserBank = function (req, res, next) {
         return __awaiter(this, void 0, void 0, function () {
-            var userId, _a, amount, recipient, reason, sendMoney, err_5;
+            var userId, _a, amount, recipient, reason, sendMoney, err_4;
             return __generator(this, function (_b) {
                 switch (_b.label) {
                     case 0:
@@ -235,8 +238,8 @@ var TransactionController = /** @class */ (function () {
                         }
                         return [3 /*break*/, 4];
                     case 3:
-                        err_5 = _b.sent();
-                        next(err_5);
+                        err_4 = _b.sent();
+                        next(err_4);
                         return [3 /*break*/, 4];
                     case 4: return [2 /*return*/];
                 }
@@ -253,7 +256,7 @@ var TransactionController = /** @class */ (function () {
      */
     TransactionController.getTransactionById = function (req, res) {
         return __awaiter(this, void 0, Promise, function () {
-            var id, transaction, error_1;
+            var id, transaction, error_2;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
@@ -269,9 +272,9 @@ var TransactionController = /** @class */ (function () {
                         res.status(200).json({ error: false, data: transaction });
                         return [3 /*break*/, 3];
                     case 2:
-                        error_1 = _a.sent();
-                        console.error(error_1);
-                        res.status(500).json({ error: true, message: error_1.message });
+                        error_2 = _a.sent();
+                        console.error(error_2);
+                        res.status(500).json({ error: true, message: error_2.message });
                         return [3 /*break*/, 3];
                     case 3: return [2 /*return*/];
                 }
@@ -288,7 +291,7 @@ var TransactionController = /** @class */ (function () {
      */
     TransactionController.getTransactionByUserId = function (req, res) {
         return __awaiter(this, void 0, Promise, function () {
-            var userId, transaction, error_2;
+            var userId, transaction, error_3;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
@@ -302,9 +305,30 @@ var TransactionController = /** @class */ (function () {
                         res.status(200).json({ error: false, data: transaction });
                         return [3 /*break*/, 3];
                     case 2:
-                        error_2 = _a.sent();
-                        console.error(error_2);
-                        res.status(500).json({ error: true, message: error_2.message });
+                        error_3 = _a.sent();
+                        console.error(error_3);
+                        res.status(500).json({ error: true, message: error_3.message });
+                        return [3 /*break*/, 3];
+                    case 3: return [2 /*return*/];
+                }
+            });
+        });
+    };
+    TransactionController.authorizeTransfer = function (req, res) {
+        return __awaiter(this, void 0, void 0, function () {
+            var error_4;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        _a.trys.push([0, 2, , 3]);
+                        return [4 /*yield*/, monnifyService_1.authorizeTransfer(req.body)];
+                    case 1:
+                        _a.sent();
+                        res.status(200).json({ error: false, message: "Transaction successful" });
+                        return [3 /*break*/, 3];
+                    case 2:
+                        error_4 = _a.sent();
+                        res.status(200).json({ error: true, message: error_4.message });
                         return [3 /*break*/, 3];
                     case 3: return [2 /*return*/];
                 }

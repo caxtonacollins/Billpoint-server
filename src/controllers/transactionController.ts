@@ -4,6 +4,7 @@ import { Transactions } from "../models/transactionModel";
 import TransactionService from "../services/transactionService";
 import PaystackService from "../services/paystack";
 import { log } from "console";
+import { authorizeTransfer } from "../services/monnifyService";
 
 /**
  * @class TransactionController
@@ -108,31 +109,30 @@ class TransactionController {
    */
   static async withDrawFromWallet(req: any, res: Response, next: NextFunction) {
     const userId = req.user.id;
-    const { amount, recipient } = req.body;
+    const { amount } = req.body;
 
-    const reason = "withrawal from wallet";
+    const narration = "withrawal from wallet";
 
     try {
       const withdrawal = await TransactionService.withdrawWalletBalance(
         userId,
         amount,
-        reason,
-        recipient
+        narration
       );
 
       if (withdrawal) {
         res
           .status(200)
-          .json({ error: false, message: "require third party API" });
-      }
-
-    } catch (err: any) {
-      log(err)
-      res
-          .status(200)
-          .json({ error: false, message: err.message });
+          .json({ error: false, message: "withdrawal successful" });
+      } else {
+        res.status(400).json({ error: true, message: "Withdrawal failed" });
     }
-
+    } catch (error: any) {
+      console.error("Error occurred:", error.message);
+      res
+        .status(500)
+        .json({ error: true, message: "An internal error occurred" });
+    }
   }
 
   /**
@@ -217,6 +217,15 @@ class TransactionController {
     } catch (error: any) {
       console.error(error);
       res.status(500).json({ error: true, message: error.message });
+    }
+  }
+
+  static async authorizeTransfer (req: Request, res: Response) {
+    try {
+      await authorizeTransfer(req.body)
+      res.status(200).json({ error: false, message: "Transaction successful" })
+    } catch (error: any) {
+      res.status(200).json({ error: true, message: error.message })
     }
   }
 }
